@@ -5,6 +5,7 @@
 
 int main(int argc, char *argv[])
 {
+    tutorial::AddressBook addressBook;
     return 0;
 }
 
