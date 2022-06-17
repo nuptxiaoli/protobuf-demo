@@ -1,0 +1,41 @@
+
+
+# step1：安装相关依赖
+$ sudo apt-get install autoconf automake libtool curl make g++ unzip
+
+# step2：下载protobuf2.6压缩包
+$ wget https://github.com/protocolbuffers/protobuf/archive/v2.6.0.zip
+
+# step3：解压压缩包并进到解压后的文件夹
+$ unzip v2.6.0.zip && cd protobuf-2.6.0
+
+# step4：由于被墙的原因，我们需要修改“autogen.sh”，修改后如下（24、25行替换22、23行）
+$ vim autogen.sh
+ 20 if test ! -e gtest; then
+ 21   echo "Google Test not present.  Fetching gtest-1.5.0 from the web..."
+ 22   # curl http://googletest.googlecode.com/files/gtest-1.5.0.tar.bz2 | tar jx
+ 23   # mv gtest-1.5.0 gtest
+ 24   curl -L https://github.com/google/googletest/archive/release-1.5.0.tar.gz | tar zx
+ 25   mv googletest-release-1.5.0 gtest
+ 26 fi
+
+# step5：执行“autogen.sh”（执行后会生成“configure”文件）
+$ sh autogen.sh
+
+# step6：执行“configure”，指定安装到“/opt/protobuf2”目录下
+$ ./configure --prefix=/opt/protobuf2
+
+# step7：安装
+$ make && make install
+
+# step8：通过ln软连接或者环境变量添加“protoc”命令（安装完后protoc命令路径在/opt/protobuf2/bin/protoc）
+# ln软连接方式
+$ ln -s /opt/protobuf2/bin/protoc /usr/local/bin/protoc
+
+# 环境变量方式
+$ vim ~/.bashrc
+export PROTOC=/opt/protobuf2
+export PATH=$PATH:$PROTOC/bin
+
+$ source ~/.bashrc
+
