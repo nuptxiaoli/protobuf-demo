@@ -1,0 +1,27 @@
+// FileName: tutorial.info.proto
+// 通常文件名建议命名格式为 包名.消息名.proto
+
+// 表示正在使用proto2命令
+syntax = "proto2";
+
+//包声明，tutorial 也可以声明为二级类型。
+//例如a.b，表示a类别下b子类别
+package tutorial;
+
+message PointLLHA {// 通用的坐标点（经度纬度朝向高度），所有跟坐标相关的能够用就统一用这个
+  optional double longitude = 1;// 经度坐标
+  optional double latitude = 2;// 纬度坐标
+  optional double heading = 3;// 朝向
+  optional double altitude = 4;// 高度
+  optional double timestamp_sec = 5;// 时间戳
+}
+
+message VehicleHeartbeat {// 无人车的心跳
+  optional bool is_normal = 1;
+  optional PointLLHA vehicle_pose = 2;
+  optional double vehicle_speed = 3;
+}
+
+message VehicleRoutingInfo {  // 无人车全局路径规划的结果
+  repeated PointLLHA way_points = 1; 
+}
