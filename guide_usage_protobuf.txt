@@ -1,0 +1,88 @@
+C++ protobuf中对不同消息内容进行赋值的方式（set_、set_allocated_、mutable_、add_的使用）
+本文中用到的消息结构：
+
+message PointLLHA {// 通用的坐标点（经度纬度朝向高度），所有跟坐标相关的能够用就统一用这个
+  optional double longitude = 1;// 经度坐标
+  optional double latitude = 2;// 纬度坐标
+  optional double heading = 3;// 朝向
+  optional double altitude = 4;// 高度
+  optional double timestamp_sec = 5;// 时间戳
+}
+
+message VehicleHeartbeat {// 无人车的心跳
+  optional bool is_normal = 1;
+  optional PointLLHA vehicle_pose = 2;
+  optional double vehicle_speed = 3;
+}
+
+message VehicleRoutingInfo {  // 无人车全局路径规划的结果
+  repeated PointLLHA way_points = 1; 
+}
+
+
+
+1.简单（非嵌套）消息内容的赋值
+简单的消息内容直接用set_来赋值就行。
+
+赋值方式：
+
+vehicle_heartbeat.set_vehicle_speed(1.2);
+
+
+
+2.嵌套消息内容的赋值
+自己定义的复杂嵌套消息不能够通过简单的set_来赋值，可采取set_allocated和mutable_两种方式，但是二者的赋值方式是不同的。
+
+使用set_allocated_，赋值的对象需要new出来，不能用局部的，因为这里用的的是对象的指针。当局部的对象被销毁后，就会报错。
+
+错误的赋值方式：
+
+PointLLHA point;
+point.set_longitude(116.20);
+point.set_latitude(39.56);
+vehicle_heartbeat.set_allocated_vehicle_pose(&point);// 这里传入的是一个马上会被销毁的指针
+
+
+Test Reslut:
+
+ubuntu@VM-0-12-ubuntu:~/protobuf-demo/build$ ./protobuf-demo
+double free or corruption (out)
+Aborted (core dumped)
+
+
+
+
+使用mutable_，赋值时候，可以使用局部变量，因为在调用的时，内部做了new操作。
+
+赋值方式1（使用set_allocated_）：
+
+PointLLHA *point = new PointLLHA;
+point->set_longitude(116.20);
+point->set_latitude(39.56);
+vehicle_heartbeat.set_allocated_vehicle_pose(point);// 这里传入的是一个指针
+
+
+
+赋值方式2（使用 mutable_）：
+
+PointLLHA point;
+point.set_longitude(116.20);
+point.set_latitude(39.56);
+vehicle_heartbeat.mutable_vehicle_pose()->CopyFrom(point);// 这里传入的是一个变量，mutable内部有一个new函数
+
+
+
+3.重复消息内容的赋值
+带有repeated字段的消息，通过add_依次赋值。
+
+赋值方式：
+
+// 第一个点
+PointLLHA *way_point = vehicle_routing_info.add_way_points();
+way_point->set_longitude(116.20);
+way_point->set_latitude(39.56);
+
+// 第二个点
+PointLLHA *way_point = vehicle_routing_info.add_way_points();
+way_point->set_longitude(116.21);
+way_point->set_latitude(39.57);
